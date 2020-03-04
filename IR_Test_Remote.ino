@@ -28,21 +28,21 @@
 //sẽ bật theo hiệu ứng đèn hàn như thế này https://www.youtube.com/watch?v=8qcqw1eFXyI hoặc mấy video gửi kèm email
 
 
-// 2. const unsigned long BBBB      = 0xYYYY; thì:
+// 3. const unsigned long BBBB      = 0xYYYY; thì:
 
 //CASE 7         = ON/OFF PIN 7   - LEFT SIGNAL
 //CASE 8         = ON/OFF PIN 8   - RIGHT SIGNAL
 
 //PIN 7 nháy nhanh 2 lần - TẮT - PIN 8 nháy nhanh 2 lần - TẮT (lặp lại liên tục cho tới khi bấm BBBB lần nữa) - Tốc độ nháy có thể điều chỉnh trong giá trị VALUE
 
-// 3. const unsigned long CCCC      = 0xZZZZ; thì: 
+// 4. const unsigned long CCCC      = 0xZZZZ; thì: 
 
 //CASE 7         = ON/OFF PIN 7   - LEFT SIGNAL
 //CASE 8         = ON/OFF PIN 8   - RIGHT SIGNAL
 
 //nháy cùng lúc 2 lần rồi tắt (khởi động/khóa xe)
 
-// 4. Hiện bấm phím POWER thì bật tất cả các đèn, bấm lần nữa thì tắt tất cả các đèn. Tuy nhiên, nếu đang có đèn nào đang sáng mà bấm POWER thì đèn đó lại tắt mà tất cả các đèn 
+// 5. Hiện bấm phím POWER thì bật tất cả các đèn, bấm lần nữa thì tắt tất cả các đèn. Tuy nhiên, nếu đang có đèn nào đang sáng mà bấm POWER thì đèn đó lại tắt mà tất cả các đèn 
 //lại bật, theo dạng TOGGLE. Muốn cứ bấm POWER thì cho dù đèn nào (1 hoặc nhiều đèn) đang bật cũng tắt, bấm lần nữa thì tất cả đều bật.
 
 //----------------------
@@ -154,6 +154,59 @@ int pos_2 = 0;
 byte SERVO_2_state_1 = 0;
 byte SERVO_2_state_2 = 0;
 
+//trongvu
+bool power_state = false;
+
+void control_blink_light(int led, int ms) {
+  //light up "led" for "ms" ms then turn off
+  digitalWrite(led, LOW);
+  digitalWrite(led, HIGH);
+  delay(ms);
+  digitalWrite(led, LOW);
+}
+
+void control_all_lights(bool turn_on){
+  digitalWrite(LED_3, turn_on);
+  digitalWrite(LED_4, turn_on);
+  digitalWrite(LED_5, turn_on);
+  digitalWrite(LED_6, turn_on);
+  digitalWrite(LED_7, turn_on);
+  digitalWrite(LED_8, turn_on);
+  digitalWrite(LED_9, turn_on);
+  digitalWrite(LED_10, turn_on);
+  digitalWrite(LED_11 turn_on);
+  digitalWrite(LED_12, turn_on);
+  digitalWrite(LED_13, turn_on);
+}
+
+bool activated_BBBB = false;
+void control_BBBB(){
+    //blink for 2 times
+    int idx = 0;
+    //nhay den 07 2 lan
+    for(idx =0; idx < 2; ++idx){
+      control_blink_light(LED_7, 100);
+    }
+    //nhay den 08 2 lan
+    for(idx =0; idx < 2; ++idx){
+      control_blink_light(LED_8, 100);
+    }
+}
+
+bool activated_CCCC = false;
+void control_CCCC(){
+  int idx = 0;
+  for(idx =0; idx < 2; ++idx){
+    //turn off first
+    digitalWrite(LED_7, LOW);
+    digitalWrite(LED_8, LOW);
+    //turn on
+    digitalWrite(LED_7, HIGH);
+    digitalWrite(LED_8, HIGH);
+    delay(100);
+  }
+}
+
 bool changeState( bool state) {
   if (state == true)
     return false;
@@ -226,18 +279,10 @@ void loop() {
       case THIRTEEN: 
         LED_13_state = changeState(LED_13_state);
         break;
-      case POWER: 
-        LED_3_state = changeState(LED_3_state);
-        LED_4_state = changeState(LED_4_state);
-        LED_5_state = changeState(LED_5_state);
-        LED_6_state = changeState(LED_6_state);
-        LED_7_state = changeState(LED_7_state);
-        LED_8_state = changeState(LED_8_state);
-        LED_9_state = changeState(LED_9_state);
-        LED_10_state = changeState(LED_10_state);
-        LED_11_state = changeState(LED_11_state);
-        LED_12_state = changeState(LED_12_state);
-        LED_13_state = changeState(LED_13_state);
+      case POWER:
+      //case 4: power
+        control_all_lights(!power_state);
+        power_state = !power_state;
         break;
       case SERVO1_1: 
         SERVO_1_state = changeState(SERVO_1_state);
@@ -254,10 +299,23 @@ void loop() {
         if ( SERVO_2_state_2 == 3)
           SERVO_2_state_2 = 1;
         break;
+      /*case BBBB:
+          activated_BBBB = !activated_BBBB;
+          break;
+        case CCCC:
+          control_CCCC();
+          break;
+      */
       default:
         break;
     }
   }
+
+//trongvu start BBBB sequence
+  if(activated_BBBB)
+    control_BBBB();
+
+
   if (LED_3_state == true) {
     digitalWrite(LED_3, !digitalRead(LED_3));
     LED_3_state = false;
@@ -317,7 +375,7 @@ void loop() {
   else {
     digitalWrite(LED_13_blink, LOW);
   }
-  if (SERVO_1_state == true || SERVO_2_state_1 == true || SERVO_2_state_2 == true) {
+  
     if (SERVO_1_state == true) {
       servo_1.write(pos_1);
       if (dir_ser_1 == true) {
@@ -350,5 +408,8 @@ void loop() {
         SERVO_2_state_2 = false;
     }
     delay(SERVO_SPEED);
-  }
+
+//just finish this loop and wait for next signal
+FINISH:
+  Serial.println("FINISH");
 }
