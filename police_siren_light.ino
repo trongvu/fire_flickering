@@ -50,6 +50,18 @@ void setup()
   
 }
 
+void control_all_lights(bool turn_on){
+  digitalWrite(LED1,turn_on);  
+  digitalWrite(LED2,turn_on);  
+  digitalWrite(LED3,turn_on); 
+  digitalWrite(LED4,turn_on);
+  digitalWrite(LED5,turn_on);
+  digitalWrite(LED6,turn_on);  
+  digitalWrite(LED7,turn_on);  
+  digitalWrite(LED8,turn_on); 
+  digitalWrite(LED9,turn_on);
+  digitalWrite(LED10,turn_on);
+}
 
 void loop()
     { 
@@ -61,6 +73,7 @@ void loop()
     switch (results.value) {
       case POWER:
       power_state = !power_state;
+      control_all_lights(power_state);
       pattern = 0;
       break;
       case NEXT:
