@@ -73,10 +73,8 @@ void loop()
     switch (results.value) {
       case POWER:
       power_state = !power_state;
-      control_all_lights(power_state);
-      pattern = 0;
       break;
-      case NEXT:
+      /*case NEXT:
       pattern = (pattern + 1) % patternCount;
       break;
       case PREV:
@@ -84,11 +82,21 @@ void loop()
         pattern = pattern - 1;
       else
         pattern = patternCount - 1;
-      break;
+      break;*/
       default:
         break;
     }
   }
+  //loop pattern call
+  if(power_state){
+    //turn on
+    pattern = (pattern + 1) % patternCount;
+  }else{
+    //turn off
+    pattern = 0;
+    control_all_lights(false);
+  }
+  
     switch (pattern)
         {
       
