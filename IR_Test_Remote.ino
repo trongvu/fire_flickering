@@ -156,62 +156,35 @@ byte SERVO_2_state_2 = 0;
 
 //trongvu
 bool power_state = false;
-
-void control_blink_light(int led, int ms) {
-  //light up "led" for "ms" ms then turn off
-  digitalWrite(led, LOW);
-  digitalWrite(led, HIGH);
-  delay(ms);
-  digitalWrite(led, LOW);
-}
-
 void control_all_lights(bool turn_on){
+  //update sequence control value
+  LED_3_state = false;
+  LED_4_state = false;
+  LED_5_state = false;
+  LED_6_state = false; 
+  LED_7_state = false;
+  LED_8_state = false;
+  LED_9_state = false;
+  LED_10_state = false;
+  LED_11_state = false;
+  LED_12_state = false;
+  LED_13_state = false;
+  
   digitalWrite(LED_3, turn_on);
   digitalWrite(LED_4, turn_on);
   digitalWrite(LED_5, turn_on);
   digitalWrite(LED_6, turn_on);
-  digitalWrite(LED_7, turn_on);
-  digitalWrite(LED_8, turn_on);
+  digitalWrite(LED_7_blink, turn_on);
+  digitalWrite(LED_8_blink, turn_on);
   digitalWrite(LED_9, turn_on);
   digitalWrite(LED_10, turn_on);
-  digitalWrite(LED_11 turn_on);
+  digitalWrite(LED_11, turn_on);
   digitalWrite(LED_12, turn_on);
-  digitalWrite(LED_13, turn_on);
+  digitalWrite(LED_13_blink, turn_on);
 }
 
-bool activated_BBBB = false;
-void control_BBBB(){
-    //blink for 2 times
-    int idx = 0;
-    //nhay den 07 2 lan
-    for(idx =0; idx < 2; ++idx){
-      control_blink_light(LED_7, 100);
-    }
-    //nhay den 08 2 lan
-    for(idx =0; idx < 2; ++idx){
-      control_blink_light(LED_8, 100);
-    }
-}
-
-bool activated_CCCC = false;
-void control_CCCC(){
-  int idx = 0;
-  for(idx =0; idx < 2; ++idx){
-    //turn off first
-    digitalWrite(LED_7, LOW);
-    digitalWrite(LED_8, LOW);
-    //turn on
-    digitalWrite(LED_7, HIGH);
-    digitalWrite(LED_8, HIGH);
-    delay(100);
-  }
-}
-
-bool changeState( bool state) {
-  if (state == true)
-    return false;
-  else
-    return true;
+bool changeState(bool state) {
+  return !state;
 }
 
 void setup()
@@ -237,7 +210,9 @@ void setup()
   servo_2.attach(SERVO_2);
 }
 void loop() {
-  if (irrecv.decode(&results)) {
+    //reset power state
+
+    if (irrecv.decode(&results)) {
     Serial.println(results.value, HEX);
     irrecv.resume();
 
@@ -281,8 +256,8 @@ void loop() {
         break;
       case POWER:
       //case 4: power
-        control_all_lights(!power_state);
         power_state = !power_state;
+        control_all_lights(power_state);
         break;
       case SERVO1_1: 
         SERVO_1_state = changeState(SERVO_1_state);
@@ -299,22 +274,10 @@ void loop() {
         if ( SERVO_2_state_2 == 3)
           SERVO_2_state_2 = 1;
         break;
-      /*case BBBB:
-          activated_BBBB = !activated_BBBB;
-          break;
-        case CCCC:
-          control_CCCC();
-          break;
-      */
       default:
         break;
     }
   }
-
-//trongvu start BBBB sequence
-  if(activated_BBBB)
-    control_BBBB();
-
 
   if (LED_3_state == true) {
     digitalWrite(LED_3, !digitalRead(LED_3));
@@ -354,7 +317,7 @@ void loop() {
       digitalWrite(LED_7_blink, !digitalRead(LED_7_blink));
     }
   }
-  else {
+  else  if(!power_state) {
     digitalWrite(LED_7_blink, LOW);
   }
   if (LED_8_state == true) {
@@ -363,7 +326,7 @@ void loop() {
       digitalWrite(LED_8_blink, !digitalRead(LED_8_blink));
     }
   }
-  else {
+  else if(!power_state) {
     digitalWrite(LED_8_blink, LOW);
   }
   if (LED_13_state == true) {
@@ -372,7 +335,7 @@ void loop() {
       digitalWrite(LED_13_blink, !digitalRead(LED_13_blink));
     }
   }
-  else {
+  else if(!power_state) {
     digitalWrite(LED_13_blink, LOW);
   }
   
@@ -408,8 +371,4 @@ void loop() {
         SERVO_2_state_2 = false;
     }
     delay(SERVO_SPEED);
-
-//just finish this loop and wait for next signal
-FINISH:
-  Serial.println("FINISH");
 }
