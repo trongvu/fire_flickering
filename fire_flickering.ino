@@ -125,7 +125,7 @@ bool fire_flickering_state = 0;
 void fire_flickering(){
   //reset state
   state_main_control = S_IDLE;
-while(5) {
+while(3) {
   switch (state_main_control)// Main control state manages the arc welding cycle
   {
     case S_IDLE:
@@ -191,7 +191,7 @@ while(5) {
   {
       case S_BLUE_ARC:
       digitalWrite(LED_11, HIGH); // set the Arc LED on
-      delay(random(10));
+      delay(random(100));
       digitalWrite(LED_11, LOW); // set the Arc LED off
       delay(random(100));
       break;
@@ -427,5 +427,6 @@ void loop() {
       fire_flickering();
       //reset control flag
       fire_flickering_state = 0;
+      control_all_lights(false);
     }
 }
