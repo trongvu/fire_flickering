@@ -40,7 +40,7 @@
 #define S_BLUE_ARC 4
 #define S_RED_GLOW 5
 #define S_TURNOFF 6
-
+#define S_EXIT 7
 static int state_main_control = S_IDLE; // initial state is idle.
 static int state_blue_arc_control = S_IDLE; // initial state is idle.
 static unsigned long ts;  // To store the "current" time.
@@ -125,6 +125,7 @@ bool fire_flickering_state = 0;
 void fire_flickering(){
   //reset state
   state_main_control = S_IDLE;
+while(5) {
   switch (state_main_control)// Main control state manages the arc welding cycle
   {
     case S_IDLE:
@@ -195,6 +196,7 @@ void fire_flickering(){
       delay(random(100));
       break;
   }
+}
 }
 //trongvu
 bool power_state = false;
