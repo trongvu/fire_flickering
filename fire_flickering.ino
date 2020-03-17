@@ -1,111 +1,3 @@
-//  ANH MUỐN BỔ SUNG THÊM DÒNG CODE DƯỚI ĐÂY ĐỂ BẤM MỘT PHÍM XYZ THÌ NÓ ACTIVATE PIN 10,11, 12 THEO HIỆU ỨNG DƯỚI ĐÂY ĐƯỢC KHÔNG ?
-
-// TẤT NHIÊN LÀ PHẦN DƯỚI CẦN CHÚ CHỈNH LẠI RỒI :) THANKS.
-
-#define S_IDLE 1
-#define S_STRIKE_ARC 2
-#define S_WHITE_ARC 3
-#define S_BLUE_ARC 4
-#define S_RED_GLOW 5
-#define S_TURNOFF 6
-
-static int state_main_control = S_IDLE; // initial state is idle.
-static int state_blue_arc_control = S_IDLE; // initial state is idle.
-static unsigned long ts;  // To store the "current" time.
-static unsigned long wait;  // To store the wait time  for delays.
-
-void setup()
-{ //Nothing to set up
-}
-void loop()
-{
-  static int ledPin_white_arc = 10; // White LED on pin 10
-  pinMode(ledPin_white_arc, OUTPUT);
-  static int ledPin_blue_arc = 11;  // Blue LED on pin 11
-  pinMode(ledPin_blue_arc, OUTPUT);
-  static int ledPin_red_glow = 12;  // Red LED on pin 12
-  pinMode(ledPin_red_glow, OUTPUT);
-
-  switch (state_main_control)// Main control state manages the arc welding cycle
-  {
-    case S_IDLE:
-      ts = millis();  // Remember the current time
-      wait = random(5000, 10000); //Set a wait time before welding cycle starts.
-      state_main_control = S_STRIKE_ARC; // Move to the Arc "striking" state.
-      break;
-
-    case S_STRIKE_ARC: // Simulates the striking needed between welding rod and work to start an arc
-      if (millis() > ts + wait)
-      {
-        digitalWrite(ledPin_white_arc, HIGH ); // Turn the white arc LED on for first attempt
-        delay(100); // First strike of white arc
-        digitalWrite(ledPin_white_arc, LOW ); // Turn the white arc LED off
-        delay(500); // Half second delay before second attempt
-        digitalWrite(ledPin_white_arc, HIGH); // set the Arc LED on for the second attempt
-        delay(200); // Second strike of white arc
-        digitalWrite(ledPin_white_arc, LOW ); // Turn the white arc LED off
-        delay (500); // Half second delay before second attempt
-        digitalWrite(ledPin_white_arc, HIGH); // set the Arc LED on for the third attempt
-        delay(300); // Third strike of white arc
-        digitalWrite(ledPin_white_arc, LOW ); // Turn the white arc LED off in preparation for full arc
-
-        ts = millis(); // Remember the current time
-        wait = random(5000, 10000); //Set a random time for now loing the arc welding cycle to run
-        state_main_control = S_WHITE_ARC; // Move on to next state
-        state_blue_arc_control = S_BLUE_ARC; // start up a simultaneous blue arc with the white arc
-      }
-      break;
-
-    case S_WHITE_ARC: // main flashing of white arc.
-      if (ts + wait > millis())// provided random time not exceede then kep welding.
-      {
-        digitalWrite(ledPin_white_arc, HIGH); // set the Arc LED off
-        delay(random(60));
-        digitalWrite(ledPin_white_arc, LOW); // set the Arc LED on
-        delay(random(200));
-        break;
-      }
-      ts = millis(); // Remember current time
-      wait = random(5000, 10000); //Set a random time for the weld glow to run
-      state_main_control = S_RED_GLOW;
-      state_blue_arc_control = S_IDLE;
-      break;
-
-    case S_RED_GLOW:// Simulates the cooling of the work from red hot after the arc is stopped using an analogue write
-      if (ts + wait > millis())
-      {
-        int i;
-        for (int i = 50; i > 0; i--) { //descrease i with 1
-          analogWrite(ledPin_red_glow, i);
-          delay(70);
-        }
-        state_main_control = S_TURNOFF;
-        break;
-      }
-    case S_TURNOFF:
-      digitalWrite(ledPin_red_glow, LOW); // Kill the last bit of analogue glow
-      state_main_control = S_IDLE;
-      break;
-  }
-  switch (state_blue_arc_control)// Separate state machine running blue arc alongside white arc at different flash frequency
-  {
-      case S_BLUE_ARC:
-      digitalWrite(ledPin_blue_arc, HIGH); // set the Arc LED on
-      delay(random(10));
-      digitalWrite(ledPin_blue_arc, LOW); // set the Arc LED off
-      delay(random(100));
-      break;
-  }
-}
-
-
-
-
-
-
-
-====
-
 //IR CONTROL    = PIN 2
 //HEADLIGHT 1   = PIN 3   * (1:144 = HEADLIGHT1)
 //HEADLIGHT 2   = PIN 4   * (1:144 = HEADLIGHT2)
@@ -140,6 +32,20 @@ void loop()
 #include <IRremote.h>
 #include <Servo.h>
 
+//trongvu -fire_flickering
+
+#define S_IDLE 1
+#define S_STRIKE_ARC 2
+#define S_WHITE_ARC 3
+#define S_BLUE_ARC 4
+#define S_RED_GLOW 5
+#define S_TURNOFF 6
+
+static int state_main_control = S_IDLE; // initial state is idle.
+static int state_blue_arc_control = S_IDLE; // initial state is idle.
+static unsigned long ts;  // To store the "current" time.
+static unsigned long wait;  // To store the wait time  for delays.
+
 int RECV_PIN = 2;
 
 IRrecv irrecv(RECV_PIN);
@@ -164,6 +70,7 @@ const unsigned long EMMERGENCY  = 0x2D2A; //ON/OFF      //WILLIAMS    - SONY PRO
 const unsigned long SERVO1_1    = 0xE6B54; //SERVO CONTINUOUS   //WILLIAMS    - SONY PROJECTOR RM-PJ8       - FREEZE
 const unsigned long SERVO22     = 0x56B54; //SERVO +            //WILLIAMS    - SONY PROJECTOR RM-PJ8       - D-ZOOM +
 const unsigned long SERVO2_     = 0xD6B54; //SERVO -            //WILLIAMS    - SONY PROJECTOR RM-PJ8       - D-ZOOM -
+const unsigned long FLICKER     = 0xABCD ; //trongvu - fire_flickering button
 
 int LED_3 = 3;//HEAD LIGHT 1
 bool LED_3_state = false;
@@ -213,6 +120,82 @@ int pos_2 = 0;
 byte SERVO_2_state_1 = 0;
 byte SERVO_2_state_2 = 0;
 
+//trongvu - fire_flickering
+bool fire_flickering_state = 0;
+void fire_flickering(){
+  //reset state
+  state_main_control = S_IDLE;
+  switch (state_main_control)// Main control state manages the arc welding cycle
+  {
+    case S_IDLE:
+      ts = millis();  // Remember the current time
+      wait = random(5000, 10000); //Set a wait time before welding cycle starts.
+      state_main_control = S_STRIKE_ARC; // Move to the Arc "striking" state.
+      break;
+
+    case S_STRIKE_ARC: // Simulates the striking needed between welding rod and work to start an arc
+      if (millis() > ts + wait)
+      {
+        digitalWrite(LED_10, HIGH ); // Turn the white arc LED on for first attempt
+        delay(100); // First strike of white arc
+        digitalWrite(LED_10, LOW ); // Turn the white arc LED off
+        delay(500); // Half second delay before second attempt
+        digitalWrite(LED_10, HIGH); // set the Arc LED on for the second attempt
+        delay(200); // Second strike of white arc
+        digitalWrite(LED_10, LOW ); // Turn the white arc LED off
+        delay (500); // Half second delay before second attempt
+        digitalWrite(LED_10, HIGH); // set the Arc LED on for the third attempt
+        delay(300); // Third strike of white arc
+        digitalWrite(LED_10, LOW ); // Turn the white arc LED off in preparation for full arc
+
+        ts = millis(); // Remember the current time
+        wait = random(5000, 10000); //Set a random time for now loing the arc welding cycle to run
+        state_main_control = S_WHITE_ARC; // Move on to next state
+        state_blue_arc_control = S_BLUE_ARC; // start up a simultaneous blue arc with the white arc
+      }
+      break;
+
+    case S_WHITE_ARC: // main flashing of white arc.
+      if (ts + wait > millis())// provided random time not exceede then kep welding.
+      {
+        digitalWrite(LED_10, HIGH); // set the Arc LED off
+        delay(random(60));
+        digitalWrite(LED_10, LOW); // set the Arc LED on
+        delay(random(200));
+        break;
+      }
+      ts = millis(); // Remember current time
+      wait = random(5000, 10000); //Set a random time for the weld glow to run
+      state_main_control = S_RED_GLOW;
+      state_blue_arc_control = S_IDLE;
+      break;
+
+    case S_RED_GLOW:// Simulates the cooling of the work from red hot after the arc is stopped using an analogue write
+      if (ts + wait > millis())
+      {
+        int i;
+        for (int i = 50; i > 0; i--) { //descrease i with 1
+          analogWrite(LED_12, i);
+          delay(70);
+        }
+        state_main_control = S_TURNOFF;
+        break;
+      }
+    case S_TURNOFF:
+      digitalWrite(LED_12, LOW); // Kill the last bit of analogue glow
+      state_main_control = S_IDLE;
+      break;
+  }
+  switch (state_blue_arc_control)// Separate state machine running blue arc alongside white arc at different flash frequency
+  {
+      case S_BLUE_ARC:
+      digitalWrite(LED_11, HIGH); // set the Arc LED on
+      delay(random(10));
+      digitalWrite(LED_11, LOW); // set the Arc LED off
+      delay(random(100));
+      break;
+  }
+}
 //trongvu
 bool power_state = false;
 void control_all_lights(bool turn_on){
@@ -333,6 +316,9 @@ void loop() {
         if ( SERVO_2_state_2 == 3)
           SERVO_2_state_2 = 1;
         break;
+      case FLICKER:
+        fire_flickering_state = 1;
+        break;
       default:
         break;
     }
@@ -430,4 +416,14 @@ void loop() {
         SERVO_2_state_2 = false;
     }
     delay(SERVO_SPEED);
+
+    //trongvu - fire_flickering
+    if(fire_flickering_state){
+      //try to turn off all LED first
+      control_all_lights(false);
+      //start flickering
+      fire_flickering();
+      //reset control flag
+      fire_flickering_state = 0;
+    }
 }
