@@ -11,7 +11,6 @@ static unsigned long ts;  // To store the "current" time.
 static unsigned long wait;  // To store the wait time  for delays.
 
 #include <IRremote.h>
-#include <Servo.h>
 
 int RECV_PIN = 2;
 
@@ -41,12 +40,11 @@ void loop() {
     if (irrecv.decode(&results)) {
       Serial.println(results.value, HEX);
       irrecv.resume();
-  
       switch (results.value) {
         case FIRE_FLICKERING:
           fire_flickering_state = !fire_flickering_state;
-          Serial.write("button pressed, change status = %d\n", fire_flickering_state);
           state_main_control = S_IDLE;
+          state_blue_arc_control = S_IDLE;
           break;
         default:
           break;
@@ -63,7 +61,7 @@ void loop() {
       break;
 
     case S_STRIKE_ARC: // Simulates the striking needed between welding rod and work to start an arc
-      if (millis() > ts + wait)
+      if (ts + wait > millis())
       {
         digitalWrite(ledPin_white_arc, HIGH ); // Turn the white arc LED on for first attempt
         delay(100); // First strike of white arc
@@ -76,12 +74,12 @@ void loop() {
         digitalWrite(ledPin_white_arc, HIGH); // set the Arc LED on for the third attempt
         delay(300); // Third strike of white arc
         digitalWrite(ledPin_white_arc, LOW ); // Turn the white arc LED off in preparation for full arc
-
-        ts = millis(); // Remember the current time
+        break;
+      }
+       ts = millis(); // Remember the current time
         wait = random(5000, 10000); //Set a random time for now loing the arc welding cycle to run
         state_main_control = S_WHITE_ARC; // Move on to next state
         state_blue_arc_control = S_BLUE_ARC; // start up a simultaneous blue arc with the white arc
-      }
       break;
 
     case S_WHITE_ARC: // main flashing of white arc.
