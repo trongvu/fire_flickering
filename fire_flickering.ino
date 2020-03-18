@@ -43,8 +43,9 @@ void loop() {
       irrecv.resume();
   
       switch (results.value) {
-        case FIRE_FLICKERING: 
+        case FIRE_FLICKERING:
           fire_flickering_state = !fire_flickering_state;
+          Serial.write("button pressed, change status = %d\n", fire_flickering_state);
           state_main_control = S_IDLE;
           break;
         default:
@@ -52,10 +53,11 @@ void loop() {
       }
     }
     //lighting logic
-  switch (state_main_control && fire_flickering_state)// Main control state manages the arc welding cycle
+ if(fire_flickering_state) {
+  switch (state_main_control)// Main control state manages the arc welding cycle
   {
     case S_IDLE:
-      ts = millis();  // Remember the current time
+      ts = millis();  // Remember the current tim
       wait = random(5000, 10000); //Set a wait time before welding cycle starts.
       state_main_control = S_STRIKE_ARC; // Move to the Arc "striking" state.
       break;
@@ -113,7 +115,7 @@ void loop() {
       state_main_control = S_IDLE;
       break;
   }
-  switch (state_blue_arc_control && fire_flickering_state)// Separate state machine running blue arc alongside white arc at different flash frequency
+  switch (state_blue_arc_control)// Separate state machine running blue arc alongside white arc at different flash frequency
   {
       case S_BLUE_ARC:
       digitalWrite(ledPin_blue_arc, HIGH); // set the Arc LED on
@@ -122,7 +124,7 @@ void loop() {
       delay(random(100));
       break;
   }
-  if(!fire_flickering_state){
+ }else {
     digitalWrite(ledPin_white_arc, LOW );
     digitalWrite(ledPin_blue_arc, LOW );
     digitalWrite(ledPin_red_glow, LOW );
